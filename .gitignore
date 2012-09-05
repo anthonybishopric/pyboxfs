@@ -1,0 +1,19 @@
+# Python compiles files
+*.py[cod]
+
+# Python C extensions
+*.so
+
+# Python packages
+*.egg/
+*.egg-info/
+
+# PyCharm noise
+.idea/
+
+# Mac noise
+.DS_Store
+
+# Build directories
+build/
+dist/
