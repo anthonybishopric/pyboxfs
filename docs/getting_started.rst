@@ -41,7 +41,9 @@ PyFilesystem requires at least **Python 2.5**. There are a few other dependencie
     
     * Boto (required for :mod:`fs.s3fs`) http://code.google.com/p/boto/
     * Paramiko (required for :class:`fs.ftpfs.FTPFS`) http://www.lag.net/paramiko/
-    * wxPython (required for :mod:`fs.browsewin`) http://www.wxpython.org/    
+    * wxPython (required for :mod:`fs.browsewin`) http://www.wxpython.org/
+    * iso8601 (required for :mod:`fs.contrib.boxfs`) http://code.google.com/p/pyiso8601/
+    * Requests (required for :mod:`fs.contrib.boxfs`) http://python-requests.org/
 
 
 Quick Examples

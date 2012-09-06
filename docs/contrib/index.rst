@@ -9,4 +9,4 @@ The ``fs.contrib`` module contains a number of filesystem implementations provid
    davfs.rst
    tahoelafs.rst
    bigfs.rst
-
+   boxfs.rst

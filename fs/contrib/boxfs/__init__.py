@@ -1,4 +1,9 @@
-"""PyFilesystem interface for items in Box."""
+"""
+fs.contrib.boxfs
+================
+
+PyFilesystem interface for items in Box.
+"""
 
 import json
 import logging
