@@ -43,7 +43,7 @@ _ITEM_TYPE_FOLDER = 'folder'
 class BoxFS(FS):
     """A filesystem stored in Box."""
 
-    _box_fs_api_key = 'b3aed1e02ea1d258ca2c2f8d5e0f7c5900bb9fcb'
+    _box_fs_api_key = 'bm16kyfy0k8boxzkifqnj3goedxuoopl'
     _box_api_base_url = 'https://api.box.com/2.0/'
 
 
