@@ -11,6 +11,8 @@ catch-all exception.
 __all__ = ['FSError',
            'CreateFailedError',
            'PathError',
+           'InvalidPathError',
+           'InvalidCharsInPathError',
            'OperationFailedError',
            'UnsupportedError',
            'RemoteConnectionError',
@@ -24,7 +26,7 @@ __all__ = ['FSError',
            'NoMetaError',
            'NoPathURLError',
            'ResourceNotFoundError',
-           'ResourceInvalidError',           
+           'ResourceInvalidError',
            'DestinationExistsError',
            'DirectoryNotEmptyError',
            'ParentDirectoryMissingError',
@@ -32,7 +34,7 @@ __all__ = ['FSError',
            'NoMMapError',
            'BackReferenceError',
            'convert_fs_errors',
-           'convert_os_errors'
+           'convert_os_errors',
            ]
 
 import sys
@@ -67,7 +69,6 @@ class FSError(Exception):
         return (self.__class__,(),self.__dict__.copy(),)
 
 
-
 class CreateFailedError(FSError):
     """An exception thrown when a FS could not be created"""
     default_message = "Unable to create filesystem"
@@ -81,7 +82,17 @@ class PathError(FSError):
     def __init__(self,path="",**kwds):
         self.path = path
         super(PathError,self).__init__(**kwds)
- 
+
+
+class InvalidPathError(PathError):
+    """Base exception for fs paths that can't be mapped on to the underlaying filesystem."""
+    default_message = "Path is invalid on this filesystem %(path)s"
+
+
+class InvalidCharsInPathError(InvalidPathError):
+    """The path contains characters that are invalid on this filesystem"""
+    default_message = "Path contains invalid characters: %(path)s"
+
 
 class OperationFailedError(FSError):
     """Base exception class for errors associated with a specific operation."""
@@ -183,6 +194,7 @@ class ParentDirectoryMissingError(ResourceError):
 class ResourceLockedError(ResourceError):
     """Exception raised when a resource can't be used because it is locked."""
     default_message = "Resource is locked: %(path)s"
+
 
 class NoMMapError(ResourceError):
     """Exception raise when getmmap fails to create a mmap"""

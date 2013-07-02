@@ -26,6 +26,10 @@ from pyftpdlib import ftpserver
 from fs.path import *
 from fs.osfs import OSFS
 from fs.errors import convert_fs_errors
+from fs import iotools
+
+from six import text_type as unicode
+
 
 # Get these once so we can reuse them:
 UID = os.getuid()
@@ -37,6 +41,8 @@ def decode_args(f):
     Decodes string arguments using the decoding defined on the method's class.
     This decorator is for use on methods (functions which take a class or instance
     as the first parameter).
+
+    Pyftpdlib (as of 0.7.0) uses str internally, so this decoding is necessary.
     """
     @wraps(f)
     def wrapper(self, *args):
@@ -78,6 +84,12 @@ class FTPFS(ftpserver.AbstractedFS):
             self.encoding = encoding
         super(FTPFS, self).__init__(root, cmd_channel)
 
+    def close(self):
+        # Close and dereference the pyfs file system.
+        if self.fs:
+            self.fs.close()
+        self.fs = None
+
     def validpath(self, path):
         try:
             normpath(path)
@@ -87,20 +99,31 @@ class FTPFS(ftpserver.AbstractedFS):
 
     @convert_fs_errors
     @decode_args
-    def open(self, path, mode):
-        return self.fs.open(path, mode)
+    @iotools.filelike_to_stream
+    def open(self, path, mode, **kwargs):
+        return self.fs.open(path, mode, **kwargs)
 
+    @convert_fs_errors
     def chdir(self, path):
+        # We dont' use the decorator here, we actually decode a version of the
+        # path for use with pyfs, but keep the original for use with pyftpdlib.
+        if not isinstance(path, unicode):
+            # pyftpdlib 0.7.x
+            unipath = unicode(path, self.encoding)
+        else:
+            # pyftpdlib 1.x
+            unipath = path
         # TODO: can the following conditional checks be farmed out to the fs?
         # If we don't raise an error here for files, then the FTP server will
         # happily allow the client to CWD into a file. We really only want to
         # allow that for directories.
-        if self.fs.isfile(path):
+        if self.fs.isfile(unipath):
             raise OSError(errno.ENOTDIR, 'Not a directory')
         # similarly, if we don't check for existence, the FTP server will allow
         # the client to CWD into a non-existent directory.
-        if not self.fs.exists(path):
+        if not self.fs.exists(unipath):
             raise OSError(errno.ENOENT, 'Does not exist')
+        # We use the original path here, so we don't corrupt self._cwd
         self._cwd = self.ftp2fs(path)
 
     @convert_fs_errors
@@ -128,6 +151,8 @@ class FTPFS(ftpserver.AbstractedFS):
     def rename(self, src, dst):
         self.fs.rename(src, dst)
 
+    @convert_fs_errors
+    @decode_args
     def chmod(self, path, mode):
         return
 
@@ -207,6 +232,18 @@ class FTPFS(ftpserver.AbstractedFS):
         return True
 
 
+class FTPFSHandler(ftpserver.FTPHandler):
+    """
+    An FTPHandler class that closes the filesystem when done.
+    """
+
+    def close(self):
+        # Close the FTPFS instance, it will close the pyfs file system.
+        if self.fs:
+            self.fs.close()
+        super(FTPFSHandler, self).close()
+
+
 class FTPFSFactory(object):
     """
     A factory class which can hold a reference to a file system object and
@@ -247,7 +284,7 @@ def serve_fs(fs, addr, port):
     combo.
     """
     from pyftpdlib.contrib.authorizers import UnixAuthorizer
-    ftp_handler = ftpserver.FTPHandler
+    ftp_handler = FTPFSHandler
     ftp_handler.authorizer = ftpserver.DummyAuthorizer()
     ftp_handler.authorizer.add_anonymous('/')
     ftp_handler.abstracted_fs = FTPFSFactory(fs)

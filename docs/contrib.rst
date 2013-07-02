@@ -20,6 +20,3 @@ BIG (BIG Archive File Format)
 A read-only interface to the BIG archive file format used in some EA games titles (e.g. Command & Conquer 4).  See :mod:`fs.contrib.bigfs`
 
 
-Box FS
-------
-A filesystem to access `Box <https://www.box.com/>`_ content. See :mod:`fs.contrib.boxfs`
